@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";  // Ensuring this is the correct import
 import { motion } from "framer-motion";
 
 // Mock shopping list items by category
