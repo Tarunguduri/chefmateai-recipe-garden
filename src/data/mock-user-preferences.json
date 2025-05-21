@@ -1,0 +1,14 @@
+
+{
+  "id": "user123",
+  "name": "Alex Johnson",
+  "dietaryPreferences": {
+    "goal": "weight loss",
+    "allergies": ["peanuts", "shellfish"],
+    "dietaryRestrictions": ["low-carb"],
+    "preferredCuisine": ["Mediterranean", "Asian", "Mexican"],
+    "spiceLevel": "medium",
+    "mealSize": "regular",
+    "proteinPreference": "balanced"
+  }
+}

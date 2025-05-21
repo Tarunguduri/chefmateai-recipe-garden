@@ -3,6 +3,7 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Camera } from "lucide-react";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ const Navigation = () => {
     { name: "Recipes", path: "/recipes" },
     { name: "Meal Planner", path: "/meal-planner" },
     { name: "Shopping List", path: "/shopping-list" },
+    { name: "Snap & Cook", path: "/snap-cook", icon: Camera },
     { name: "Profile", path: "/profile" },
   ];
 
@@ -35,13 +37,14 @@ const Navigation = () => {
                 to={link.path}
                 className={({ isActive }) =>
                   cn(
-                    "px-3 py-2 rounded-md text-sm font-montserrat font-medium transition-all duration-200",
+                    "px-3 py-2 rounded-md text-sm font-montserrat font-medium transition-all duration-200 flex items-center gap-2",
                     isActive 
                       ? "bg-chef-soft-orange text-chef-bright-orange" 
                       : "text-gray-600 hover:bg-chef-soft-peach hover:text-chef-bright-orange"
                   )
                 }
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.name}
               </NavLink>
             ))}
@@ -98,7 +101,7 @@ const Navigation = () => {
               to={link.path}
               className={({ isActive }) =>
                 cn(
-                  "block px-3 py-2 rounded-md text-base font-montserrat font-medium transition-all duration-200",
+                  "block px-3 py-2 rounded-md text-base font-montserrat font-medium transition-all duration-200 flex items-center gap-2",
                   isActive
                     ? "bg-chef-soft-orange text-chef-bright-orange"
                     : "text-gray-600 hover:bg-chef-soft-peach hover:text-chef-bright-orange"
@@ -106,6 +109,7 @@ const Navigation = () => {
               }
               onClick={() => setIsMenuOpen(false)}
             >
+              {link.icon && <link.icon className="w-4 h-4" />}
               {link.name}
             </NavLink>
           ))}

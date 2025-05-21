@@ -1,0 +1,103 @@
+
+[
+  {
+    "id": 1,
+    "title": "Mediterranean Chickpea Salad",
+    "image": "/recipes/chickpea-salad.jpg",
+    "calories": 320,
+    "protein": 12,
+    "carbs": 45,
+    "fat": 10,
+    "cookingTime": 15,
+    "detectedIngredients": [
+      "Chickpeas",
+      "Cucumber",
+      "Red onion",
+      "Cherry tomatoes",
+      "Bell pepper",
+      "Feta cheese",
+      "Olive oil"
+    ],
+    "instructions": [
+      "Drain and rinse 1 can of chickpeas and place in a large bowl",
+      "Dice 1 cucumber, 1/2 red onion, 1 cup cherry tomatoes, and 1 bell pepper",
+      "Add all vegetables to the bowl with chickpeas",
+      "Crumble 1/2 cup feta cheese over the salad",
+      "Whisk together 3 tbsp olive oil, 1 tbsp lemon juice, salt, and pepper",
+      "Pour dressing over salad and toss gently",
+      "Refrigerate for 30 minutes before serving for best flavor"
+    ],
+    "preferences": {
+      "goal": "general health",
+      "cuisine": "Mediterranean",
+      "dietaryRestrictions": ["vegetarian"]
+    }
+  },
+  {
+    "id": 2,
+    "title": "Protein-Packed Quinoa Bowl",
+    "image": "/recipes/quinoa-bowl.jpg",
+    "calories": 480,
+    "protein": 28,
+    "carbs": 52,
+    "fat": 15,
+    "cookingTime": 25,
+    "detectedIngredients": [
+      "Quinoa",
+      "Chicken breast",
+      "Avocado",
+      "Broccoli",
+      "Sweet potato",
+      "Lime",
+      "Olive oil"
+    ],
+    "instructions": [
+      "Cook 1 cup quinoa according to package instructions",
+      "Season 8 oz chicken breast with salt, pepper, and garlic powder",
+      "Grill or bake chicken until internal temperature reaches 165°F",
+      "Dice and roast 1 sweet potato with olive oil at 400°F for 20 minutes",
+      "Steam 1 cup broccoli florets until tender-crisp",
+      "Slice 1 avocado",
+      "Assemble bowl with quinoa, sliced chicken, roasted sweet potato, broccoli, and avocado",
+      "Drizzle with olive oil and lime juice before serving"
+    ],
+    "preferences": {
+      "goal": "muscle gain",
+      "cuisine": "Health",
+      "dietaryRestrictions": []
+    }
+  },
+  {
+    "id": 3,
+    "title": "Low-Carb Zucchini Noodles with Pesto",
+    "image": "/recipes/zucchini-noodles.jpg",
+    "calories": 280,
+    "protein": 8,
+    "carbs": 12,
+    "fat": 22,
+    "cookingTime": 20,
+    "detectedIngredients": [
+      "Zucchini",
+      "Fresh basil",
+      "Pine nuts",
+      "Garlic",
+      "Parmesan cheese",
+      "Cherry tomatoes",
+      "Olive oil"
+    ],
+    "instructions": [
+      "Spiralize 2 large zucchini into noodles",
+      "In a food processor, combine 2 cups fresh basil, 2 cloves garlic, 1/4 cup pine nuts, and 1/4 cup grated parmesan",
+      "Pulse while slowly adding 1/3 cup olive oil until pesto forms",
+      "Heat 1 tbsp olive oil in a large pan over medium heat",
+      "Sauté zucchini noodles for 2-3 minutes until just tender",
+      "Toss zucchini with pesto and halved cherry tomatoes",
+      "Top with additional grated parmesan before serving"
+    ],
+    "preferences": {
+      "goal": "weight loss",
+      "cuisine": "Italian",
+      "dietaryRestrictions": ["low-carb"]
+    }
+  }
+]
