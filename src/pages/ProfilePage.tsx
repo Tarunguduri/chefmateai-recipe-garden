@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client"; 
 import { toast } from "sonner";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 const ProfilePage = () => {
   const { user } = useAuth();
+  const { profile, updateProfile, loading: profileLoading } = useUserProfile();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -27,40 +27,22 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  const totalSteps = 5; // Added one more step for cuisine preferences
+  const totalSteps = 5; // Total number of steps in the profile setup
 
   useEffect(() => {
-    if (user) {
-      loadUserProfile();
+    if (profile && !profileLoaded) {
+      setFormData({
+        name: profile.name || "",
+        age: profile.age ? profile.age.toString() : "",
+        goal: profile.goal || "weightLoss",
+        dietaryPreferences: profile.dietary_preferences || [],
+        activityLevel: profile.activity_level || 2,
+        allergies: profile.allergies || "",
+        cuisinePreferences: profile.cuisine_preferences || [],
+      });
+      setProfileLoaded(true);
     }
-  }, [user]);
-
-  const loadUserProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        setFormData({
-          name: data.name || "",
-          age: data.age ? data.age.toString() : "",
-          goal: data.goal || "weightLoss",
-          dietaryPreferences: data.dietary_preferences || [],
-          activityLevel: data.activity_level || 2,
-          allergies: data.allergies || "",
-          cuisinePreferences: data.cuisine_preferences || [],
-        });
-        setProfileLoaded(true);
-      }
-    } catch (error) {
-      console.error("Error loading profile:", error);
-    }
-  };
+  }, [profile, profileLoaded]);
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -123,19 +105,15 @@ const ProfilePage = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          id: user.id,
-          name: formData.name,
-          age: formData.age ? parseInt(formData.age) : null,
-          goal: formData.goal,
-          dietary_preferences: formData.dietaryPreferences,
-          activity_level: formData.activityLevel,
-          allergies: formData.allergies,
-          cuisine_preferences: formData.cuisinePreferences,
-          updated_at: new Date().toISOString()
-        });
+      const { error } = await updateProfile({
+        name: formData.name,
+        age: formData.age ? parseInt(formData.age) : undefined,
+        goal: formData.goal,
+        dietary_preferences: formData.dietaryPreferences,
+        activity_level: formData.activityLevel,
+        allergies: formData.allergies,
+        cuisine_preferences: formData.cuisinePreferences,
+      });
 
       if (error) throw error;
       toast.success("Profile saved successfully!");
@@ -178,6 +156,14 @@ const ProfilePage = () => {
   };
 
   const selectedProgress = progressValues[formData.goal as keyof typeof progressValues];
+
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-chef-bright-orange"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-chef-soft-gray py-12">
