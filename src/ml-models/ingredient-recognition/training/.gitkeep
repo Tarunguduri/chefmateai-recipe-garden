@@ -1,0 +1,7 @@
+
+# Directory for model training scripts and utilities
+# Example files:
+# - train.ts: Main training script
+# - preprocess.ts: Data preprocessing utilities
+# - augmentation.ts: Image augmentation techniques
+# - evaluation.ts: Model evaluation metrics

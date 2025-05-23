@@ -4,17 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Camera, Upload, Trash2, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Camera, Upload, Trash2, ChevronRight, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzeResult } from './AnalyzeResult';
 import { generateRecipeFromImage } from './PhotoToRecipeAPI';
 import { Recipe } from './PhotoToRecipeAPI';
+import { ingredientModel } from '@/ml-models/ingredient-recognition/ModelService';
+import { IngredientAnalysisResult, NutritionalPreference } from '@/ml-models/ingredient-recognition/types';
 
-export const ImageCapture = () => {
+interface ImageCaptureProps {
+  userPreferences: NutritionalPreference;
+}
+
+const ImageCapture = ({ userPreferences }: ImageCaptureProps) => {
   const [image, setImage] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [ingredientAnalysis, setIngredientAnalysis] = useState<IngredientAnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -84,6 +91,7 @@ export const ImageCapture = () => {
   const clearImage = () => {
     setImage(null);
     setRecipe(null);
+    setIngredientAnalysis(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -97,12 +105,49 @@ export const ImageCapture = () => {
 
     setIsAnalyzing(true);
     try {
-      const generatedRecipe = await generateRecipeFromImage(image);
-      setRecipe(generatedRecipe);
+      // First use our enhanced ML model to identify ingredients
+      const analysis = await ingredientModel.identifyIngredients(image);
+      setIngredientAnalysis(analysis);
+      
+      // Use the identified ingredients to generate a recipe
+      const generatedRecipe = await ingredientModel.generateRecipe(
+        analysis.ingredients,
+        userPreferences
+      );
+      
+      // Convert to the expected Recipe format for the AnalyzeResult component
+      const formattedRecipe: Recipe = {
+        id: Date.now(),
+        title: generatedRecipe.title,
+        image: generatedRecipe.imageUrl,
+        calories: generatedRecipe.nutritionalInfo.calories,
+        protein: generatedRecipe.nutritionalInfo.protein,
+        carbs: generatedRecipe.nutritionalInfo.carbs,
+        fat: generatedRecipe.nutritionalInfo.fat,
+        cookingTime: generatedRecipe.cookingTime,
+        detectedIngredients: analysis.ingredients.map(ing => ing.name),
+        instructions: generatedRecipe.instructions,
+        preferences: {
+          goal: userPreferences.goal,
+          cuisine: userPreferences.cuisinePreferences?.[0] || 'General',
+          dietaryRestrictions: userPreferences.dietaryRestrictions || [],
+        }
+      };
+      
+      setRecipe(formattedRecipe);
       toast.success('Recipe generated successfully!');
     } catch (error) {
       console.error('Error generating recipe:', error);
-      toast.error('Failed to analyze image. Please try again.');
+      
+      // Fall back to the original method if our enhanced method fails
+      try {
+        const fallbackRecipe = await generateRecipeFromImage(image);
+        setRecipe(fallbackRecipe);
+        toast.success('Recipe generated using fallback method!');
+      } catch (fallbackError) {
+        console.error('Fallback recipe generation failed:', fallbackError);
+        toast.error('Failed to analyze image. Please try again.');
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -201,6 +246,44 @@ export const ImageCapture = () => {
                   </Button>
                 </div>
 
+                <AnimatePresence>
+                  {ingredientAnalysis && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                    >
+                      <h3 className="text-lg font-semibold mb-2">Detected Ingredients</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {ingredientAnalysis.ingredients.map(ing => (
+                          <div 
+                            key={ing.name} 
+                            className="bg-white px-3 py-1 rounded-full border border-gray-200 text-sm flex items-center"
+                          >
+                            <span>{ing.name}</span>
+                            <span className="ml-1 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                              {Math.round(ing.confidence * 100)}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-sm text-gray-500">
+                        <span className="font-medium">Analysis quality: </span>
+                        <span className={`font-semibold ${
+                          ingredientAnalysis.imageQuality === 'high' 
+                            ? 'text-green-600' 
+                            : ingredientAnalysis.imageQuality === 'medium'
+                              ? 'text-yellow-600'
+                              : 'text-red-600'
+                        }`}>
+                          {ingredientAnalysis.imageQuality.toUpperCase()}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex justify-center mt-4">
                   <Button
                     onClick={analyzeImage}
@@ -209,7 +292,7 @@ export const ImageCapture = () => {
                   >
                     {isAnalyzing ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         Analyzing Ingredients...
                       </>
                     ) : (

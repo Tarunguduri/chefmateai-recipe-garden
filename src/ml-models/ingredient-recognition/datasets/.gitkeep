@@ -1,0 +1,5 @@
+
+# Directory for ingredient recognition datasets
+# Organized by category:
+# - datasets/training/[category]/[image_files]
+# - datasets/validation/[category]/[image_files]
