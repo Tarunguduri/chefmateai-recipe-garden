@@ -1,127 +1,126 @@
 
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { 
+  Home, 
+  Utensils, 
+  User, 
+  CalendarDays, 
+  ShoppingBag,
+  Camera,
+  Menu,
+  X
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Camera } from "lucide-react";
+import UserMenu from "@/components/auth/UserMenu";
 
 const Navigation = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "Recipes", path: "/recipes" },
-    { name: "Meal Planner", path: "/meal-planner" },
-    { name: "Shopping List", path: "/shopping-list" },
-    { name: "Snap & Cook", path: "/snap-cook", icon: Camera },
-    { name: "Profile", path: "/profile" },
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const closeMenu = () => setIsOpen(false);
+
+  // Navigation items with icons
+  const navItems = [
+    { path: "/", label: "Home", icon: <Home size={20} /> },
+    { path: "/recipes", label: "Recipes", icon: <Utensils size={20} /> },
+    { path: "/profile", label: "Profile", icon: <User size={20} /> },
+    { path: "/meal-planner", label: "Meal Planner", icon: <CalendarDays size={20} /> },
+    { path: "/shopping-list", label: "Shopping List", icon: <ShoppingBag size={20} /> },
+    { path: "/snap-cook", label: "Snap & Cook", icon: <Camera size={20} /> },
   ];
 
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm">
+    <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <NavLink to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-montserrat font-bold bg-gradient-to-r from-chef-bright-orange to-chef-soft-orange bg-clip-text text-transparent">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <span className="font-bold text-xl text-chef-bright-orange">
                 ChefMateAI
               </span>
-            </NavLink>
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-4">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.name}
-                to={link.path}
-                className={({ isActive }) =>
-                  cn(
-                    "px-3 py-2 rounded-md text-sm font-montserrat font-medium transition-all duration-200 flex items-center gap-2",
-                    isActive 
-                      ? "bg-chef-soft-orange text-chef-bright-orange" 
-                      : "text-gray-600 hover:bg-chef-soft-peach hover:text-chef-bright-orange"
-                  )
-                }
-              >
-                {link.icon && <link.icon className="w-4 h-4" />}
-                {link.name}
-              </NavLink>
+          <div className="hidden md:flex md:items-center md:space-x-2">
+            {navItems.map((item) => (
+              <Link key={item.path} to={item.path}>
+                <Button
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  className={`flex items-center gap-2 ${
+                    isActive(item.path) 
+                      ? "bg-chef-bright-orange hover:bg-chef-bright-orange text-white" 
+                      : "text-gray-600 hover:text-chef-bright-orange hover:bg-chef-soft-peach"
+                  }`}
+                  onClick={closeMenu}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Button>
+              </Link>
             ))}
-            <Button
-              variant="default"
-              className="ml-4 font-montserrat bg-chef-bright-orange text-white hover:bg-opacity-90 transition-all duration-200 hover:scale-105"
-            >
-              Sign In
-            </Button>
           </div>
           
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-black hover:bg-chef-soft-peach focus:outline-none"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg 
-                  className="block h-6 w-6" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg 
-                  className="block h-6 w-6" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor" 
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+          {/* User menu - shown on all screen sizes */}
+          <div className="flex items-center">
+            <UserMenu />
+            
+            {/* Mobile menu button */}
+            <div className="ml-2 md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(!isOpen)}
+                aria-expanded={isOpen}
+                className="relative"
+              >
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Mobile Navigation */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden bg-white`}>
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) =>
-                cn(
-                  "block px-3 py-2 rounded-md text-base font-montserrat font-medium transition-all duration-200 flex items-center gap-2",
-                  isActive
-                    ? "bg-chef-soft-orange text-chef-bright-orange"
+
+      {/* Mobile Navigation Drawer */}
+      {isOpen && isMobile && (
+        <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  isActive(item.path)
+                    ? "bg-chef-bright-orange text-white"
                     : "text-gray-600 hover:bg-chef-soft-peach hover:text-chef-bright-orange"
-                )
-              }
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {link.icon && <link.icon className="w-4 h-4" />}
-              {link.name}
-            </NavLink>
-          ))}
-          <Button
-            variant="default"
-            className="w-full mt-3 py-2 font-montserrat bg-chef-bright-orange text-white hover:bg-opacity-90"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Sign In
-          </Button>
+                }`}
+                onClick={closeMenu}
+              >
+                <div className="flex items-center gap-3">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 };

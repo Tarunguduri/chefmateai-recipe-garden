@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +8,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client"; 
+import { toast } from "sonner";
 
 const ProfilePage = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -18,9 +22,45 @@ const ProfilePage = () => {
     dietaryPreferences: [] as string[],
     activityLevel: 2,
     allergies: "",
+    cuisinePreferences: [] as string[],
   });
+  const [loading, setLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
-  const totalSteps = 4;
+  const totalSteps = 5; // Added one more step for cuisine preferences
+
+  useEffect(() => {
+    if (user) {
+      loadUserProfile();
+    }
+  }, [user]);
+
+  const loadUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setFormData({
+          name: data.name || "",
+          age: data.age ? data.age.toString() : "",
+          goal: data.goal || "weightLoss",
+          dietaryPreferences: data.dietary_preferences || [],
+          activityLevel: data.activity_level || 2,
+          allergies: data.allergies || "",
+          cuisinePreferences: data.cuisine_preferences || [],
+        });
+        setProfileLoaded(true);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  };
 
   const handleNext = () => {
     if (currentStep < totalSteps) {
@@ -60,11 +100,50 @@ const ProfilePage = () => {
     });
   };
 
+  const handleCuisinePreferenceToggle = (cuisine: string) => {
+    const updatedCuisines = formData.cuisinePreferences.includes(cuisine)
+      ? formData.cuisinePreferences.filter(item => item !== cuisine)
+      : [...formData.cuisinePreferences, cuisine];
+      
+    setFormData({
+      ...formData,
+      cuisinePreferences: updatedCuisines,
+    });
+  };
+
   const handleSliderChange = (value: number[]) => {
     setFormData({
       ...formData,
       activityLevel: value[0],
     });
+  };
+
+  const saveProfile = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user.id,
+          name: formData.name,
+          age: formData.age ? parseInt(formData.age) : null,
+          goal: formData.goal,
+          dietary_preferences: formData.dietaryPreferences,
+          activity_level: formData.activityLevel,
+          allergies: formData.allergies,
+          cuisine_preferences: formData.cuisinePreferences,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      toast.success("Profile saved successfully!");
+    } catch (error: any) {
+      toast.error("Error saving profile: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const dietaryPreferences = [
@@ -74,6 +153,19 @@ const ProfilePage = () => {
     { id: "dairyFree", label: "Dairy Free" },
     { id: "keto", label: "Keto" },
     { id: "paleo", label: "Paleo" },
+  ];
+
+  const cuisineTypes = [
+    { id: "italian", label: "Italian" },
+    { id: "mexican", label: "Mexican" },
+    { id: "indian", label: "Indian" },
+    { id: "chinese", label: "Chinese" },
+    { id: "japanese", label: "Japanese" },
+    { id: "thai", label: "Thai" },
+    { id: "mediterranean", label: "Mediterranean" },
+    { id: "french", label: "French" },
+    { id: "american", label: "American" },
+    { id: "middleEastern", label: "Middle Eastern" },
   ];
 
   const activityLabels = ["Sedentary", "Lightly Active", "Moderately Active", "Very Active", "Extremely Active"];
@@ -305,6 +397,7 @@ const ProfilePage = () => {
                 <Slider
                   id="activityLevel"
                   defaultValue={[formData.activityLevel]}
+                  value={[formData.activityLevel]}
                   min={1}
                   max={5}
                   step={1}
@@ -321,9 +414,44 @@ const ProfilePage = () => {
               </div>
             </motion.div>
           )}
-          
-          {/* Step 4: Allergies & Finish */}
+
+          {/* Step 4: Cuisine Preferences (New step) */}
           {currentStep === 4 && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="p-6"
+            >
+              <h2 className="text-2xl font-montserrat font-semibold mb-6">Cuisine Preferences</h2>
+              <p className="text-gray-600 mb-4">Select the cuisines you enjoy most:</p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {cuisineTypes.map((cuisine) => (
+                  <Card 
+                    key={cuisine.id}
+                    className={`border-2 cursor-pointer transition-all duration-200 hover:shadow ${
+                      formData.cuisinePreferences.includes(cuisine.id) 
+                        ? 'border-chef-bright-orange bg-chef-soft-peach' 
+                        : 'border-transparent'
+                    }`}
+                    onClick={() => handleCuisinePreferenceToggle(cuisine.id)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-center h-full">
+                      <span className="font-medium text-center">{cuisine.label}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                Your cuisine preferences help us tailor recipe recommendations to your taste
+              </p>
+            </motion.div>
+          )}
+          
+          {/* Step 5: Allergies & Finish */}
+          {currentStep === 5 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -377,6 +505,16 @@ const ProfilePage = () => {
                       </dd>
                     </div>
                     <div className="flex flex-col col-span-full">
+                      <dt className="text-sm text-gray-500">Cuisine Preferences</dt>
+                      <dd className="font-medium">
+                        {formData.cuisinePreferences.length > 0 
+                          ? formData.cuisinePreferences.map(cuisine => 
+                              cuisineTypes.find(c => c.id === cuisine)?.label
+                            ).join(", ")
+                          : "None specified"}
+                      </dd>
+                    </div>
+                    <div className="flex flex-col col-span-full">
                       <dt className="text-sm text-gray-500">Allergies</dt>
                       <dd className="font-medium">{formData.allergies || "None specified"}</dd>
                     </div>
@@ -399,10 +537,15 @@ const ProfilePage = () => {
               <div></div>
             )}
             <Button
-              onClick={currentStep < totalSteps ? handleNext : () => {}}
+              onClick={currentStep < totalSteps ? handleNext : saveProfile}
               className="bg-chef-bright-orange hover:bg-opacity-90"
+              disabled={loading}
             >
-              {currentStep < totalSteps ? "Continue" : "Save Profile"}
+              {loading 
+                ? "Saving..." 
+                : currentStep < totalSteps 
+                  ? "Continue" 
+                  : "Save Profile"}
             </Button>
           </div>
         </div>
