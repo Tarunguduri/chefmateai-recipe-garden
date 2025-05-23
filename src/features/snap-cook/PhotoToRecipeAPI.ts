@@ -1,8 +1,7 @@
-
 import mockRecipes from '@/data/mock-recipes.json';
 import mockUserPreferences from '@/data/mock-user-preferences.json';
 import { ingredientModel } from '@/ml-models/ingredient-recognition/ModelService';
-import type { IngredientPrediction } from '@/ml-models/ingredient-recognition/types';
+import type { IngredientPrediction, IngredientAnalysisResult } from '@/ml-models/ingredient-recognition/types';
 
 // Types
 export type UserPreferences = {
@@ -112,7 +111,10 @@ export const analyzeImageIngredients = async (imageData: string): Promise<string
     console.log('Analyzing image for ingredients...');
     
     // Use the ML model to identify ingredients
-    const predictions: IngredientPrediction[] = await ingredientModel.identifyIngredients(imageData);
+    const analysisResult: IngredientAnalysisResult = await ingredientModel.identifyIngredients(imageData);
+    
+    // Extract the ingredients from the analysis result
+    const predictions = analysisResult.ingredients;
     
     // Filter predictions by confidence threshold
     const CONFIDENCE_THRESHOLD = 0.7;
